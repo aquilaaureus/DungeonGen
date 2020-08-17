@@ -1,35 +1,35 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
 
 public class GeneratorScript : MonoBehaviour {
 
-	public Transform Character;
-	private static float sqSize = 1f;
-	private static int border = 3;
+	public Transform pc_Character;
+	private static float m_fsqSize = 1f;
+	private static int m_iborder = 3;
 
 
 	[Range(50,300)]
-	public int width;
+	public int m_iwidth;
 
 	[Range(40,250)]
-	public int height;
+	public int m_iheight;
 
 	[HideInInspector]
-	System.Random RandomNum;
+	System.Random pc_RandomNum;
 
 	[HideInInspector]
-	int FillPercent;
+	int m_iFillPercent;
 
 	[HideInInspector]
-	int[,] map;
+	int[,] ma_imap;
 
 	void Start () {	//Generate initial data (seeds)
-		RandomNum = new System.Random ();
-		FillPercent = RandomNum.Next (45,55);
-		map = new int[width, height];
-		GenerateMap (); //Start map Generation
+		pc_RandomNum = new System.Random ();
+		m_iFillPercent = pc_RandomNum.Next (45,55);
+		ma_imap = new int[width, m_iheight];
+		Generatema_imap (); //Start ma_imap Generation
 	}
 
 	struct Coord {	//struct representing coordinates and also the tile corresponding to those coordinates
@@ -48,12 +48,12 @@ public class GeneratorScript : MonoBehaviour {
 	//A region is a set of interconnected tiles. Each tile can only belong in one region.
 	List<Coord> getRegionTilesList(int startX, int startY){ 
 		List<Coord> tiles = new List<Coord> ();
-		int[,] mapFlags = new int[width,height];
-		int tileType = map [startX, startY];
+		int[,] ma_imapFlags = new int[width,m_iheight];
+		int tileType = ma_imap [startX, startY];
 
 		Queue<Coord> queue = new Queue<Coord> ();
 		queue.Enqueue (new Coord (startX, startY));
-		mapFlags[startX, startY] = 1;
+		ma_imapFlags[startX, startY] = 1;
 
 		Coord tile;
 
@@ -63,9 +63,9 @@ public class GeneratorScript : MonoBehaviour {
 
 			for (int i = tile.tileX - 1; i <= tile.tileX + 1; i++) {
 				for (int j = tile.tileY - 1; j <= tile.tileY + 1; j++) {
-					if (i >= 0 && i < width && j >= 0 && j < height && (i==tile.tileX ^ j==tile.tileY)) {
-						if (mapFlags [i, j] == 0 && map[i,j] == tileType) {
-							mapFlags [i, j] = 1;
+					if (i >= 0 && i < m_iwidth&& j >= 0 && j < m_iheight && (i==tile.tileX ^ j==tile.tileY)) {
+						if (ma_imapFlags [i, j] == 0 && ma_imap[i,j] == tileType) {
+							ma_imapFlags [i, j] = 1;
 							queue.Enqueue (new Coord (i, j));
 						}
 					}
@@ -75,20 +75,20 @@ public class GeneratorScript : MonoBehaviour {
 		return tiles;
 	}
 
-	//helper function for getting all the regions on the map.
-	//the map generation process is over when the entire map is a region
+	//helper function for getting all the regions on the ma_imap.
+	//the ma_imap generation process is over when the entire ma_imap is a region
 	//you may select to get either all ground sets or all wall sets by passing 0 or 1 respectively to the function
 	List<List<Coord>> GetAllRegions(int tiletype){
 		List<List<Coord>> regions = new List<List<Coord>> ();
-		int[,] mapFlags = new int[width,height];
+		int[,] ma_imapFlags = new int[width,m_iheight];
 
 		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
-				if (mapFlags [x, y] == 0 && map [x, y] == tiletype) {
+			for (int y = 0; y < m_iheight; y++) {
+				if (ma_imapFlags [x, y] == 0 && ma_imap [x, y] == tiletype) {
 					List<Coord> newRegion = getRegionTilesList (x, y);
 					regions.Add (newRegion);
 					foreach (Coord tile in newRegion) {
-						mapFlags [tile.tileX, tile.tileY] = 1;
+						ma_imapFlags [tile.tileX, tile.tileY] = 1;
 					}
 				}
 			}
@@ -96,35 +96,35 @@ public class GeneratorScript : MonoBehaviour {
 		return regions;
 	}
 
-	//first part of the map generation process
-	//randomly fill the map with empty spaces (0) and walls (1), so that is is filled with empty spaces up to about FillPercent%
-	private void GenerateMap(){
+	//first part of the ma_imap generation process
+	//randomly fill the ma_imap with empty spaces (0) and walls (1), so that is is filled with empty spaces up to about m_iFillPercent%
+	private void Generatema_imap(){
 		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
-				map [x, y] = (RandomNum.Next (1, 100) < FillPercent) ? 1 : 0;
+			for (int y = 0; y < m_iheight; y++) {
+				ma_imap [x, y] = (pc_RandomNum.Next (1, 100) < m_iFillPercent) ? 1 : 0;
 			}
 		}
 
 		for (int i = 0; i < 4; i++) {
-			SmoothMap ();
+			Smoothma_imap ();
 		}
 
-		RegulateMap ();
+		Regulatema_imap ();
 
 	}
 
 	//part 2 of the process. Group the empty spaces and the walls together 
 	//so that they form areas rather than just be noise. Repeats as needed
-	void SmoothMap(){
+	void Smoothma_imap(){
 		int fenceCount;
 		for (int x = 0; x < width; x++) {
-			for (int y = 0; y < height; y++) {
+			for (int y = 0; y < m_iheight; y++) {
 				fenceCount = GetSurroundingTileCount (x, y);
 
 				if (fenceCount > 4)
-					map [x, y] = 1;
+					ma_imap [x, y] = 1;
 				else if (fenceCount < 4)
-					map[x,y] = 0;
+					ma_imap[x,y] = 0;
 			}
 		}
 	}
@@ -133,7 +133,7 @@ public class GeneratorScript : MonoBehaviour {
 
 	//Part 3 of the process. Remove very small areas caught in the middle of bigger areas so
 	//that the areas are large enough to give the feeling of a cave
-	void RegulateMap(){
+	void Regulatema_imap(){
 		List<List<Coord>> wallRegions = GetAllRegions (1);
 		List<List<Coord>> areaRegions = GetAllRegions (0);
 
@@ -143,7 +143,7 @@ public class GeneratorScript : MonoBehaviour {
 		foreach (List<Coord> region in wallRegions) {
 			if (region.Count < regulateThreshold) {
 				foreach (Coord tile in region) {
-					map [tile.tileX, tile.tileY] = 0;
+					ma_imap [tile.tileX, tile.tileY] = 0;
 				}
 			}
 		}
@@ -151,7 +151,7 @@ public class GeneratorScript : MonoBehaviour {
 		foreach (List<Coord> region in areaRegions) {
 			if (region.Count < regulateThreshold) {
 				foreach (Coord tile in region) {
-					map [tile.tileX, tile.tileY] = 1;
+					ma_imap [tile.tileX, tile.tileY] = 1;
 				}
 			} 
 		}
@@ -164,12 +164,12 @@ public class GeneratorScript : MonoBehaviour {
 
 	}
 
-	//Part 4 and final in the map generation process. Connect regions along their shortest path\
-	//until there is only one region left (all areas in the map are connected). After that,
+	//Part 4 and final in the ma_imap generation process. Connect regions along their shortest path\
+	//until there is only one region left (all areas in the ma_imap are connected). After that,
 	//start generating the actual dungeon (mesh).
 	void ReduceRegions(List<List<Coord>> areaRegions){
 
-		int bestdistance = height * width;
+		int bestdistance = m_iheight * width;
 		int distance;
 		HashSet<List<Coord>> check = new HashSet<List<Coord>> ();
 		Coord bestTileA = new Coord ();
@@ -216,7 +216,7 @@ public class GeneratorScript : MonoBehaviour {
 
 	//helper function for changing a wall into an empty sapce so that to clear a path.
 	//Special cases for horizontal and verical passageways, plus a general form
-	private void OpenPassageway(Coord tileA, Coord tileB){ // 1 point from each side to ensure a minimum passage width of 2, maximum of 3
+	private void OpenPassageway(Coord tileA, Coord tileB){ // 1 point from each side to ensure a minimum passage m_iwidthof 2, maximum of 3
 		if (tileA.tileX == tileB.tileX) {
 			for (int i= Math.Min(tileA.tileY, tileB.tileY);i<=Math.Max(tileA.tileY, tileB.tileY); i++){
 				ClearPoint (new Coord (tileA.tileX-1, i));
@@ -297,28 +297,28 @@ public class GeneratorScript : MonoBehaviour {
 	//helper function actually changin the wall tile to empty space tile, while
 	//also ensuring there are no out-of-bounds errors
 	private void ClearPoint(Coord tile){
-		if (tile.tileX > 0 && tile.tileY > 0 && tile.tileX < width && tile.tileY < height) {
-			map [tile.tileX, tile.tileY] = 0;
+		if (tile.tileX > 0 && tile.tileY > 0 && tile.tileX < m_iwidth&& tile.tileY < m_iheight) {
+			ma_imap [tile.tileX, tile.tileY] = 0;
 		}
 	}
 
-	//Here the map generation process is complete and we can start generating the actual mesh.
-	//Before that, the borded (wall area at the edges of the map with thickness of more than 1), if any, is removed.
+	//Here the ma_imap generation process is complete and we can start generating the actual mesh.
+	//Before that, the borded (wall area at the edges of the ma_imap with thickness of more than 1), if any, is removed.
 	public void CreateCave(){
-		int[,] fullmap = new int[width+border*2,height+border*2];
+		int[,] fullma_imap = new int[width+border*2,m_iheight+border*2];
 
-		for (int x = 0; x < fullmap.GetLength(0); x++) {
-			for (int y = 0; y < fullmap.GetLength(1); y++) {
-				if (x >= border && x < width + border && y >= border && y < height + border) {
-					fullmap [x, y] = map [x - border, y - border];
+		for (int x = 0; x < fullma_imap.GetLength(0); x++) {
+			for (int y = 0; y < fullma_imap.GetLength(1); y++) {
+				if (x >= m_iborder && x < m_iwidth+ m_iborder && y >= m_iborder && y < m_iheight + border) {
+					fullma_imap [x, y] = ma_imap [x - border, y - border];
 				} else {
-					fullmap [x, y] = 1;
+					fullma_imap [x, y] = 1;
 				}
 			}
 		}
 
 		MeshGenerator meshGen = GetComponent<MeshGenerator> ();
-		meshGen.GenerateMesh (fullmap, sqSize);
+		meshGen.GenerateMesh (fullma_imap, sqSize);
 		ResetCharPos ();
 	}
 
@@ -339,13 +339,13 @@ public class GeneratorScript : MonoBehaviour {
 					count++;
 					continue;
 				}
-				if (neighY >= height) {
+				if (neighY >= m_iheight) {
 					count++;
 					continue;
 				}
 				if (neighX == posX && neighY == posY)
 					continue;
-				count += map [neighX, neighY];
+				count += ma_imap [neighX, neighY];
 			}
 		}
 		return count;
@@ -354,11 +354,11 @@ public class GeneratorScript : MonoBehaviour {
 
 	/* //Special debug function
 	void OnDrawGizmos(){
-		if (map != null) {
+		if (ma_imap != null) {
 			for (int x = 0; x < width; x++) {
-				for (int y = 0; y < height; y++) {
-					Gizmos.color = (map [x, y] == 1) ? Color.black : Color.white;
-					Vector3 pos = new Vector3 (-width * 0.5f + x + 0.5f, 0, -height * 0.5f + y + 0.5f);
+				for (int y = 0; y < m_iheight; y++) {
+					Gizmos.color = (ma_imap [x, y] == 1) ? Color.black : Color.white;
+					Vector3 pos = new Vector3 (-m_iwidth* 0.5f + x + 0.5f, 0, -m_iheight * 0.5f + y + 0.5f);
 					Gizmos.DrawCube (pos, Vector3.one);
 				}
 			}
@@ -369,64 +369,64 @@ public class GeneratorScript : MonoBehaviour {
 	float CharY=0;
 	float CharX=0;
 
-	//update function, also moving camera/character
+	//update function, also moving camera/pc_Character
 	void Update(){
 
 		CharY += 2*Input.GetAxis ("Mouse X");
 		CharX += 2*Input.GetAxis ("Mouse Y");
 		Vector3 pointTo = new Vector3 (-CharX, CharY, 0);
-		Character.rotation = Quaternion.Euler(pointTo);
+		pc_Character.rotation = Quaternion.Euler(pointTo);
 
 		if (Input.GetKeyDown (KeyCode.Return)) {
 			Resources.UnloadUnusedAssets ();
-			FillPercent = RandomNum.Next (45, 55);
-			map = new int[width, height];
-			GenerateMap ();
+			m_iFillPercent = pc_RandomNum.Next (45, 55);
+			ma_imap = new int[width, m_iheight];
+			Generatema_imap ();
 			ResetCharPos ();
 		}
 		if (Input.GetKey (KeyCode.S) || Input.GetKey (KeyCode.DownArrow)) {
-			Character.position -= 2*Character.forward * Time.deltaTime;
+			pc_Character.position -= 2*pc_Character.forward * Time.deltaTime;
 		}
 		if (Input.GetKey (KeyCode.W) || Input.GetKey (KeyCode.UpArrow)) {
-			Character.position += 2*Character.forward * Time.deltaTime;
+			pc_Character.position += 2*pc_Character.forward * Time.deltaTime;
 		}
 		if (Input.GetKey (KeyCode.A) || Input.GetKey (KeyCode.LeftArrow)) {
-			Character.position -= 2*Character.right * Time.deltaTime;
+			pc_Character.position -= 2*pc_Character.right * Time.deltaTime;
 		}
 		if (Input.GetKey (KeyCode.D) || Input.GetKey (KeyCode.RightArrow)) {
-			Character.position += 2*Character.right * Time.deltaTime;
+			pc_Character.position += 2*pc_Character.right * Time.deltaTime;
 		}
 	}
 
-	//helper function to determine if a tile is on the edge of the map
+	//helper function to determine if a tile is on the edge of the ma_imap
 	bool isEdge(int x, int y){
 		x -= border;
 		y -= border;
 
-		if (map [x, y] == 1)
+		if (ma_imap [x, y] == 1)
 			return true;
-		if (map [x - 1, y] == 1)
+		if (ma_imap [x - 1, y] == 1)
 			return true;
-		if (map [x + 1, y] == 1)
+		if (ma_imap [x + 1, y] == 1)
 			return true;
-		if (map [x , y - 1] == 1)
+		if (ma_imap [x , y - 1] == 1)
 			return true;
-		if (map [x , y + 1] == 1)
+		if (ma_imap [x , y + 1] == 1)
 			return true;
 
 		return false;
 	}
 
-	//helper function called to place the character/camera on the cave floor.
+	//helper function called to place the pc_Character/camera on the cave floor.
 	void ResetCharPos(){
 		int x, y;
 
 		do {
-			x=RandomNum.Next(border+1,width+border-1);
-			y=RandomNum.Next(border+1,height+border-1);
+			x=pc_RandomNum.Next(border+1,width+border-1);
+			y=pc_RandomNum.Next(border+1,m_iheight+border-1);
 
 		} while(isEdge (x, y));
 
-		Character.position = new Vector3 (-width/2 + (0.5f+x)*sqSize, 1, -height/2 + (0.5f+y)*sqSize);
+		pc_Character.position = new Vector3 (-width/2 + (0.5f+x)*sqSize, 1, -m_iheight/2 + (0.5f+y)*sqSize);
 	}
 }
