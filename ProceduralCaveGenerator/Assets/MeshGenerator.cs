@@ -1,25 +1,25 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class MeshGenerator : MonoBehaviour {
 
-	public SquareGrid squareGrid;
-	List<Vector3> vertices;	//list of 3D vectors
-	List<int> triangles;	//list of vector indexes for triange formation
+	public SquareGrid pc_squareGrid;
+	List<Vector3> pa_v3vertices;	//list of 3D vectors
+	List<int> pa_itriangles;	//list of vector indexes for triange formation
 
-	public MeshFilter walls;
-	private static float wallHeight = 5f;
-	private static float baseHeight = 1f;
-	private int mapWidth;
-	private int mapHeight;
-	private float squareSize;
+	public MeshFilter pc_walls;
+	private static float km_fwallHeight = 5f;
+	private static float km_fbaseHeight  = 1f;
+	private int m_imapWidth;
+	private int m_imapHeight;
+	private float m_fsquareSize;
 
 
-	Dictionary<int, List<Triangle>> trigDictionary = new Dictionary<int, List<Triangle>>();
-	List<List<int>> outlines = new List<List<int>>();
-	HashSet<int> checkedVertices = new HashSet<int> ();
-	HashSet<List<int>> createdEdges = new HashSet<List<int>> ();
+	Dictionary<int, List<Triangle>> pc_trigDictionary = new Dictionary<int, List<Triangle>>();
+	List<List<int>> paa_ioutlines = new List<List<int>>();
+	HashSet<int> pc_checkedVertices = new HashSet<int> ();
+	HashSet<List<int>> pc_createdEdges = new HashSet<List<int>> ();
 
 	//make triagles from sqares (tiles) depending on the wall shape
 	//around them, indicated from the case number (the configuration of the square). 
@@ -80,10 +80,10 @@ public class MeshGenerator : MonoBehaviour {
 
 		case 0:
 			PointsToMesh (square.topLeft, square.topRight, square.bottomRight, square.bottomLeft);
-			checkedVertices.Add (square.topLeft.index);
-			checkedVertices.Add (square.topRight.index);
-			checkedVertices.Add (square.bottomLeft.index);
-			checkedVertices.Add (square.bottomRight.index);
+			pc_checkedVertices.Add (square.topLeft.index);
+			pc_checkedVertices.Add (square.topRight.index);
+			pc_checkedVertices.Add (square.bottomLeft.index);
+			pc_checkedVertices.Add (square.bottomRight.index);
 			break;
 
 		}
@@ -148,26 +148,26 @@ public class MeshGenerator : MonoBehaviour {
 
 		case 0:
 			PointsToMeshC (square.topLeft, square.topRight, square.bottomRight, square.bottomLeft);
-			checkedVertices.Add (square.topLeft.index);
-			checkedVertices.Add (square.topRight.index);
-			checkedVertices.Add (square.bottomLeft.index);
-			checkedVertices.Add (square.bottomRight.index);
+			pc_checkedVertices.Add (square.topLeft.index);
+			pc_checkedVertices.Add (square.topRight.index);
+			pc_checkedVertices.Add (square.bottomLeft.index);
+			pc_checkedVertices.Add (square.bottomRight.index);
 			break;
 
 		}
 	}
 
-	//helper function for adding vertices (3D vectors) to the list
+	//helper function for adding pa_v3vertices (3D vectors) to the list
 	void AssignVertices(Node[] points){
 		for (int i = 0; i < points.Length; i++) {
 			if (points [i].index == -1) {
-				points [i].index = vertices.Count;
-				vertices.Add (points [i].position);
+				points [i].index = pa_v3vertices.Count;
+				pa_v3vertices.Add (points [i].position);
 			}
 		}
 	}
 
-	//helper function for selecting points to form triangles for the floor
+	//helper function for selecting points to form pa_itriangles for the floor
 	void PointsToMesh(params Node[] points){
 		AssignVertices (points);
 
@@ -185,7 +185,7 @@ public class MeshGenerator : MonoBehaviour {
 
 	}
 
-	//helper function for selecting points to form triangles for the ceiling
+	//helper function for selecting points to form pa_itriangles for the ceiling
 	void PointsToMeshC(params Node[] points){
 		AssignVertices (points);
 
@@ -205,9 +205,9 @@ public class MeshGenerator : MonoBehaviour {
 
 	//actual triagle generation for the mesh
 	void GenerateTriangle(Node a, Node b, Node c){
-		triangles.Add (a.index);
-		triangles.Add (b.index);
-		triangles.Add (c.index);
+		pa_itriangles.Add (a.index);
+		pa_itriangles.Add (b.index);
+		pa_itriangles.Add (c.index);
 
 		Triangle triangle = new Triangle (a.index, b.index, c.index);
 		AddTrigToDictionary(triangle, a.index);
@@ -217,18 +217,18 @@ public class MeshGenerator : MonoBehaviour {
 
 	//helper function for adding the triagle to the dictionary
 	void AddTrigToDictionary(Triangle triangle, int index){
-		if (trigDictionary.ContainsKey (index)) {
-			trigDictionary [index].Add (triangle);
+		if (pc_trigDictionary.ContainsKey (index)) {
+			pc_trigDictionary [index].Add (triangle);
 		} else {
 			List<Triangle> trList = new List<Triangle> ();
 			trList.Add (triangle);
-			trigDictionary.Add (index, trList);
+			pc_trigDictionary.Add (index, trList);
 		}
 	}
 
 	//helper function for determining if the triagle forms an outer edge
 	bool isExternalEdge(int vertIndexA, int vertIndexB){
-		List<Triangle> ListA = trigDictionary [vertIndexA];
+		List<Triangle> ListA = pc_trigDictionary [vertIndexA];
 		int sharedTriangles = 0;
 		foreach (Triangle triangle in ListA) {
 			if(triangle.Contains(vertIndexB)){
@@ -241,12 +241,12 @@ public class MeshGenerator : MonoBehaviour {
 
 	//helper function for getting the (index of the) other side of the edge in question
 	int GetConnectedEdgeVertex(int indexA){
-		List<Triangle> ListA = trigDictionary [indexA];
+		List<Triangle> ListA = pc_trigDictionary [indexA];
 		foreach (Triangle triangle in ListA) {
 			foreach (int vertexB in triangle) {
 				if (vertexB == indexA)
 					continue;
-				if (checkedVertices.Contains (vertexB))
+				if (pc_checkedVertices.Contains (vertexB))
 					continue;
 				if(isExternalEdge(indexA, vertexB)){
 					//print ("Edge: "+indexA + ", " + vertexB);
@@ -258,31 +258,31 @@ public class MeshGenerator : MonoBehaviour {
 		return -1;
 	}
 
-	//find (and add to variable) the vertices that make up the outer sides of the mesh
+	//find (and add to variable) the pa_v3vertices that make up the outer sides of the mesh
 	void CalculateMeshOutlines(){
 
 		int currentCouple;
 
-		for (int current = 0; current < vertices.Count; current++) {
-			if (!checkedVertices.Contains (current)) {
+		for (int current = 0; current < pa_v3vertices.Count; current++) {
+			if (!pc_checkedVertices.Contains (current)) {
 				currentCouple = GetConnectedEdgeVertex (current);
 				if (currentCouple != -1) {
-					checkedVertices.Add (current);
+					pc_checkedVertices.Add (current);
 
 					List<int> newEdge = new List<int> ();
 					newEdge.Add (current);
-					outlines.Add (newEdge);
-					FollowEdge (currentCouple, outlines.Count - 1);
-					outlines [outlines.Count - 1].Add (current);
+					paa_ioutlines.Add (newEdge);
+					FollowEdge (currentCouple, paa_ioutlines.Count - 1);
+					paa_ioutlines [paa_ioutlines.Count - 1].Add (current);
 				}
 			}
 		}
 	}
 
-	//helper function for tracking vertices along an edge to see if it is an external (outer) edge
+	//helper function for tracking pa_v3vertices along an edge to see if it is an external (outer) edge
 	void FollowEdge(int vertexIndex, int edgesIndex){
-		outlines [edgesIndex].Add (vertexIndex);
-		checkedVertices.Add (vertexIndex);
+		paa_ioutlines [edgesIndex].Add (vertexIndex);
+		pc_checkedVertices.Add (vertexIndex);
 		int nextVert = GetConnectedEdgeVertex (vertexIndex);
 
 		if (nextVert != -1) {
@@ -291,12 +291,12 @@ public class MeshGenerator : MonoBehaviour {
 	}
 
 	//helper function for finding the "mirror" edge in the mesh. Cave floor is 
-	//mirrored in the ceiling since the walls are vertical.
+	//mirrored in the ceiling since the pc_walls are vertical.
 	List<int> findCoupledEdge(List<int> edge){
-		foreach (List<int> edgeC in outlines) {
+		foreach (List<int> edgeC in paa_ioutlines) {
 			if (edgeC == edge)
 				continue;
-			if (Vector3.Magnitude (vertices [edge [0]] - vertices [edgeC [0]]) == wallHeight) {
+			if (Vector3.Magnitude (pa_v3vertices [edge [0]] - pa_v3vertices [edgeC [0]]) == km_fwallHeight) {
 				return edgeC;
 			}
 		}
@@ -307,45 +307,45 @@ public class MeshGenerator : MonoBehaviour {
 	//Mesh generation function. Gets a link to the map and the tile size
 	public void GenerateMesh(int[,] _map, float _size){
 
-		Debug.Assert (wallHeight % baseHeight == 0, "wallHeight must be divisible by baseHeight");
+		Debug.Assert (km_fwallHeight % km_fbaseHeight  == 0, "km_fwallHeight must be divisible by km_fbaseHeight ");
 
-		squareGrid = new SquareGrid (_map, _size);
-		vertices = new List<Vector3>();
-		triangles = new List<int>();
+		pc_squareGrid = new SquareGrid (_map, _size);
+		pa_v3vertices = new List<Vector3>();
+		pa_itriangles = new List<int>();
 
-		mapWidth = _map.GetLength (0);
-		mapHeight = _map.GetLength (1);
-		squareSize = _size;
+		m_imapWidth = _map.GetLength (0);
+		m_imapHeight = _map.GetLength (1);
+		m_fsquareSize = _size;
 
 		//clear all lists (needed if reloading game)
-		outlines.Clear ();
-		checkedVertices.Clear ();
-		trigDictionary.Clear ();
-		createdEdges.Clear ();
+		paa_ioutlines.Clear ();
+		pc_checkedVertices.Clear ();
+		pc_trigDictionary.Clear ();
+		pc_createdEdges.Clear ();
 
 		//form floor
-		for (int i = 0; i < squareGrid.gridF.GetLength (0); i++) {
-			for (int j = 0; j < squareGrid.gridF.GetLength (1); j++) {
-				SquareToTrigsFloor (squareGrid.gridF [i, j]);
+		for (int i = 0; i < pc_squareGrid.gridF.GetLength (0); i++) {
+			for (int j = 0; j < pc_squareGrid.gridF.GetLength (1); j++) {
+				SquareToTrigsFloor (pc_squareGrid.gridF [i, j]);
 			}
 		}
 
 		//form ceiling
-		for (int i = 0; i < squareGrid.gridC.GetLength (0); i++) {
-			for (int j = 0; j < squareGrid.gridC.GetLength (1); j++) {
-				SquareToTrigsCeiling (squareGrid.gridC [i, j]);
+		for (int i = 0; i < pc_squareGrid.gridC.GetLength (0); i++) {
+			for (int j = 0; j < pc_squareGrid.gridC.GetLength (1); j++) {
+				SquareToTrigsCeiling (pc_squareGrid.gridC [i, j]);
 			}
 		}
 
 		//create mesh object
 		Mesh caveMesh = new Mesh ();
-		caveMesh.vertices = vertices.ToArray ();
-		caveMesh.triangles = triangles.ToArray ();
+		caveMesh.pa_v3vertices = pa_v3vertices.ToArray ();
+		caveMesh.pa_itriangles = pa_itriangles.ToArray ();
 
-		Vector2[] uvs = new Vector2[vertices.Count];
-		for (int i = 0; i < vertices.Count; i++) {
-			float pX = 10*Mathf.InverseLerp (-mapWidth /2* squareSize, mapWidth /2* squareSize, vertices [i].x);
-			float pY = 10*Mathf.InverseLerp (-mapHeight /2* squareSize, mapHeight /2* squareSize, vertices [i].z);
+		Vector2[] uvs = new Vector2[pa_v3vertices.Count];
+		for (int i = 0; i < pa_v3vertices.Count; i++) {
+			float pX = 10*Mathf.InverseLerp (-m_imapWidth /2* m_fsquareSize, m_imapWidth /2* m_fsquareSize, pa_v3vertices [i].x);
+			float pY = 10*Mathf.InverseLerp (-m_imapHeight /2* m_fsquareSize, m_imapHeight /2* m_fsquareSize, pa_v3vertices [i].z);
 			uvs [i] = new Vector2 (pX, pY);
 		}
 		caveMesh.uv = uvs;
@@ -361,15 +361,15 @@ public class MeshGenerator : MonoBehaviour {
 		caveMeshF.mesh = caveMesh;
 	}
 
-	//form walls and link them to ceiling and flooor
-	//walls are formed in steps, to make them more detailed and slightly more realistic
+	//form pc_walls and link them to ceiling and flooor
+	//pc_walls are formed in steps, to make them more detailed and slightly more realistic
 	//each wall actually includes 5 steps
 	void CreateWallComplexMesh(){
 
-		walls = GetComponentInChildren<MeshFilter> ();
-		walls.mesh.Clear (true);
-		walls.sharedMesh.Clear(true);
-		MeshCollider collider = walls.gameObject.AddComponent<MeshCollider> ();
+		pc_walls = GetComponentInChildren<MeshFilter> ();
+		pc_walls.mesh.Clear (true);
+		pc_walls.sharedMesh.Clear(true);
+		MeshCollider collider = pc_walls.gameObject.AddComponent<MeshCollider> ();
 		collider.sharedMesh.Clear (true);
 
 
@@ -390,51 +390,51 @@ public class MeshGenerator : MonoBehaviour {
 		List<int> edge = new List<int> ();
 		List<int> edgeC = new List<int> ();
 
-		int repeats = (int)(wallHeight / baseHeight);
+		int repeats = (int)(km_fwallHeight / km_fbaseHeight );
 		repeats--;
 
-		for(int a=0; a< outlines.Count;a++) {
-			edge = outlines[a];
+		for(int a=0; a< paa_ioutlines.Count;a++) {
+			edge = paa_ioutlines[a];
 			edgeC = findCoupledEdge (edge);
 			diff1 = 0;
 			diff2 = 0;
 
 			if (edgeC == null)
 				continue;
-			if (createdEdges.Contains (edge) || createdEdges.Contains (edgeC)) //the edges are formed in (mirrored) pairs, so if either edge has been processed before, ignore this one)
+			if (pc_createdEdges.Contains (edge) || pc_createdEdges.Contains (edgeC)) //the edges are formed in (mirrored) pairs, so if either edge has been processed before, ignore this one)
 				continue;
 			for (int i = 0; i < edge.Count - 1; i++) { 
-				base1 = vertices [edge [i]]; 	//left
-				base2 = vertices [edge [i + 1]]; //right
+				base1 = pa_v3vertices [edge [i]]; 	//left
+				base2 = pa_v3vertices [edge [i + 1]]; //right
 				diff1 = diff2;
-				diff2 += Vector3.Magnitude(base2-base1)/(10*squareSize);
-				//Debug.DrawLine(vertices[edge[i]], vertices[edge[i+1]], Color.red, 50000f, false);
-				//Debug.DrawLine(vertices[edgeC[i]], vertices[edgeC[i+1]], Color.blue, 50000f, false);
+				diff2 += Vector3.Magnitude(base2-base1)/(10*m_fsquareSize);
+				//Debug.DrawLine(pa_v3vertices[edge[i]], pa_v3vertices[edge[i+1]], Color.red, 50000f, false);
+				//Debug.DrawLine(pa_v3vertices[edgeC[i]], pa_v3vertices[edgeC[i+1]], Color.blue, 50000f, false);
 				for (int k = 1; k < repeats; k++) {
 					start = wallVertices.Count;
 
 					wallVertices.Add (base1); 	//left
 					pX = diff1;
-					pY = Mathf.InverseLerp (vertices [edge [i]].y, vertices [edgeC [i]].y, base1.y);
+					pY = Mathf.InverseLerp (pa_v3vertices [edge [i]].y, pa_v3vertices [edgeC [i]].y, base1.y);
 					uvs.Add( new Vector2 (pX, pY) );
 
 					wallVertices.Add (base2); //right
 					pX = diff2;
-					pY = Mathf.InverseLerp (vertices [edge [i+1]].y, vertices [edgeC [i+1]].y, base2.y);
+					pY = Mathf.InverseLerp (pa_v3vertices [edge [i+1]].y, pa_v3vertices [edgeC [i+1]].y, base2.y);
 					uvs.Add( new Vector2 (pX, pY) );
 
-					base1 += (Vector3.up * baseHeight);
-					base2 += (Vector3.up * baseHeight);
+					base1 += (Vector3.up * km_fbaseHeight );
+					base2 += (Vector3.up * km_fbaseHeight );
 					//diff=base1-base2;
 
 					wallVertices.Add (base1); 	//top left
 					pX = diff1;
-					pY = Mathf.InverseLerp (vertices [edge [i]].y, vertices [edgeC [i]].y, base1.y);
+					pY = Mathf.InverseLerp (pa_v3vertices [edge [i]].y, pa_v3vertices [edgeC [i]].y, base1.y);
 					uvs.Add( new Vector2 (pX, pY) );
 
 					wallVertices.Add (base2); 	//top right
 					pX = diff2;
-					pY = Mathf.InverseLerp (vertices [edge [i+1]].y, vertices [edgeC [i+1]].y, base2.y);
+					pY = Mathf.InverseLerp (pa_v3vertices [edge [i+1]].y, pa_v3vertices [edgeC [i+1]].y, base2.y);
 					uvs.Add( new Vector2 (pX, pY) );
 
 					wallTriagles.Add (start + 0);
@@ -454,20 +454,20 @@ public class MeshGenerator : MonoBehaviour {
 
 				wallVertices.Add (base1); //left
 				pX = diff1;
-				pY = Mathf.InverseLerp (vertices [edge [i]].y, vertices [edgeC [i]].y, base2.y);
+				pY = Mathf.InverseLerp (pa_v3vertices [edge [i]].y, pa_v3vertices [edgeC [i]].y, base2.y);
 				uvs.Add( new Vector2 (pX, pY) );
 
 				wallVertices.Add (base2); //right
 				pX = diff2;
-				pY = Mathf.InverseLerp (vertices [edge [i+1]].y, vertices [edgeC [i+1]].y, base2.y);
+				pY = Mathf.InverseLerp (pa_v3vertices [edge [i+1]].y, pa_v3vertices [edgeC [i+1]].y, base2.y);
 				uvs.Add( new Vector2 (pX, pY) );
 
-				wallVertices.Add ( vertices[edgeC[i]] ); 	//top left, ceiling
+				wallVertices.Add ( pa_v3vertices[edgeC[i]] ); 	//top left, ceiling
 				pX = diff1;
 				pY = 1;
 				uvs.Add( new Vector2 (pX, pY) );
 
-				wallVertices.Add ( vertices[edgeC[i+1]] ); 	//top right, ceiling
+				wallVertices.Add ( pa_v3vertices[edgeC[i+1]] ); 	//top right, ceiling
 				pX = diff2;
 				pY = 1;
 				uvs.Add( new Vector2 (pX, pY) );
@@ -480,22 +480,22 @@ public class MeshGenerator : MonoBehaviour {
 				wallTriagles.Add (start + 1);
 				wallTriagles.Add (start + 0);
 
-				createdEdges.Add (edge);
-				createdEdges.Add (edgeC);
+				pc_createdEdges.Add (edge);
+				pc_createdEdges.Add (edgeC);
 				  
 			}
 		}
 
 
 
-		wallMesh.vertices = wallVertices.ToArray ();
-		wallMesh.triangles = wallTriagles.ToArray ();
+		wallMesh.pa_v3vertices = wallVertices.ToArray ();
+		wallMesh.pa_itriangles = wallTriagles.ToArray ();
 
 		wallMesh.uv = uvs.ToArray ();
 
 
 		wallMesh.RecalculateNormals ();
-		walls.mesh = wallMesh;
+		pc_walls.mesh = wallMesh;
 
 
 		collider.sharedMesh = wallMesh;
@@ -511,14 +511,14 @@ public class MeshGenerator : MonoBehaviour {
 		public int VertIndex2;
 		public int VertIndex3;
 
-		private int[] verticesIndex;
+		private int[] pa_v3verticesIndex;
 
 		public Triangle(int a, int b, int c){
 			VertIndex1=a;
 			VertIndex2=b;
 			VertIndex3=c;
 
-			verticesIndex = new int[] {a,b,c};
+			pa_v3verticesIndex = new int[] {a,b,c};
 		}
 
 		public bool Contains(int a){
@@ -538,7 +538,7 @@ public class MeshGenerator : MonoBehaviour {
 			}
 
 			public bool MoveNext(){
-				if (pos < t.verticesIndex.Length - 1) {
+				if (pos < t.pa_v3verticesIndex.Length - 1) {
 					pos++;
 					return true;
 				} else
@@ -551,7 +551,7 @@ public class MeshGenerator : MonoBehaviour {
 
 			public object Current{
 				get{
-					return t.verticesIndex [pos];
+					return t.pa_v3verticesIndex [pos];
 				}
 			}
 		}
@@ -562,15 +562,15 @@ public class MeshGenerator : MonoBehaviour {
 		public Square[,] gridF; //TODO: Wherever gridF is used to make the floor, use gridC to make the ceiling
 		public Square[,] gridC;
 
-		public SquareGrid(int[,] map, float squareSize){
+		public SquareGrid(int[,] map, float m_fsquareSize){
 
 			//TODO: Use Parlin Noise generator in two grids to get height randomization for ceiling and floor. Max diviation to be 1.
 
 			int XnodeCount = map.GetLength(0);
 			int YnodeCount = map.GetLength(1);
 
-			float mapWidth = XnodeCount*squareSize;
-			float mapHeight = YnodeCount*squareSize;
+			float m_imapWidth = XnodeCount*m_fsquareSize;
+			float m_imapHeight = YnodeCount*m_fsquareSize;
 
 			ControlNode[,] NodesTableF = new ControlNode[XnodeCount,YnodeCount];
 			Vector3 posF;
@@ -579,10 +579,10 @@ public class MeshGenerator : MonoBehaviour {
 
 			for(int i = 0; i<XnodeCount; i++){
 				for(int j=0;j<YnodeCount;j++){
-					posF = new Vector3(-mapWidth/2 + (i+0.5f)*squareSize, 0, -mapHeight/2 + (j+0.5f)*squareSize);
-					NodesTableF[i,j] = new ControlNode(posF, map[i,j]==1, squareSize);
-					posC = new Vector3(-mapWidth/2 + (i+0.5f)*squareSize, wallHeight, -mapHeight/2 + (j+0.5f)*squareSize);
-					NodesTableC[i,j] = new ControlNode(posC, map[i,j]==1, squareSize);
+					posF = new Vector3(-m_imapWidth/2 + (i+0.5f)*m_fsquareSize, 0, -m_imapHeight/2 + (j+0.5f)*m_fsquareSize);
+					NodesTableF[i,j] = new ControlNode(posF, map[i,j]==1, m_fsquareSize);
+					posC = new Vector3(-m_imapWidth/2 + (i+0.5f)*m_fsquareSize, km_fwallHeight, -m_imapHeight/2 + (j+0.5f)*m_fsquareSize);
+					NodesTableC[i,j] = new ControlNode(posC, map[i,j]==1, m_fsquareSize);
 				}
 			}
 
